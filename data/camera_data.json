@@ -1,4 +1,16 @@
 {
+    "camera_follow": [
+        "Camera smoothly tracks the movements of <object>.",
+        "The camera pans alongside <object>, capturing every move.",
+        "Following <object>, the camera keeps pace with its motions.",
+        "The camera dynamically follows <object> throughout the scene.",
+        "Capturing <object> in motion, the camera stays locked on target.",
+        "Tracking <object>, the camera provides a dynamic view of its actions.",
+        "With precision, the camera follows <object> as it moves.",
+        "Keeping <object> centered, the camera tracks its path.",
+        "Throughout the sequence, the camera follows <object> seamlessly.",
+        "From start to finish, the camera's focus remains on <object>."
+    ],
     "orientation": {
         "yaw_max": 360,
         "yaw_min": 0,

@@ -404,7 +404,7 @@ def get_camera_plane_vertices(camera, frame_number):
 
         # Get plane dimensions
         plane_width, plane_height = get_plane_dimensions(stage)
-        max_distance = min(plane_width, plane_height) / 2  # Define a maximum reasonable distance based on plane size
+        max_distance = min(plane_width, plane_height) / 4  # Define a maximum reasonable distance based on plane size
         
         if result:
             # Flatten Z value to the plane height if above it
@@ -491,12 +491,11 @@ def apply_movement(objects, yaw, start_frame, end_frame):
 
     # Get camera plane vertices
     plane_vertices = get_camera_plane_vertices(camera, start_frame)
-    # create_mesh_from_vertices(plane_vertices)
-    # visualize_frustum(camera, plane_vertices)
-    # visualize_plane_vertices(plane_vertices)
+    create_mesh_from_vertices(plane_vertices)
+    visualize_frustum(camera, plane_vertices)
+    visualize_plane_vertices(plane_vertices)
 
     # draw_vector_from_camera(camera)
-
     logger.info(f"planer_vertices: {plane_vertices}")
 
     # Calculate midpoints of each edge
@@ -532,16 +531,20 @@ def apply_movement(objects, yaw, start_frame, end_frame):
             "right": (0, 1, 0),
             "left": (0, -1, 0)
         }[movement["direction"]])
+
         rotated_vector = rotation_matrix @ direction_vector
         step_vector = rotated_vector * movement["speed"]
 
-        # Calculate offset
-        offset_multiplier = 2  # Adjust this value to increase or decrease the offset
-        offset = step_vector * offset_multiplier
-
+        offset = Vector((0, 0, 0))
+        if movement["direction"] in ["forward", "backward"]:
+            offset.y = obj.dimensions.y
+        elif movement["direction"] in ["left", "right"]:
+            offset.x = obj.dimensions.x
+            
         # Position object at initial location at the start frame
         scene.frame_set(start_frame)
-        obj.location = obj.location + initial_position - offset
+
+        obj.location += initial_position - (step_vector * 4)
         obj.keyframe_insert(data_path="location", frame=start_frame)
 
         # Animate object from start_frame to end_frame

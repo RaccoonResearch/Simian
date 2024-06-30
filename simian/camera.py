@@ -97,6 +97,11 @@ def create_camera_rig() -> bpy.types.Object:
 
     bpy.context.scene.camera = camera_object
 
+     # Add camera follow object
+    camera_follow = bpy.data.objects.new("CameraFollow", None)
+    camera_follow.parent = camera_animation_root
+    bpy.context.scene.collection.objects.link(camera_follow)
+
     return {
         "camera_animation_root": camera_animation_root,
         "camera_orientation_pivot_yaw": camera_orientation_pivot_yaw,
@@ -105,7 +110,33 @@ def create_camera_rig() -> bpy.types.Object:
         "camera_animation_pivot": camera_animation_pivot,
         "camera_object": camera_object,
         "camera": camera,
+        "camera_follow": camera_follow,
     }
+
+
+def update_camera_follow(combination: dict) -> None:
+    """
+    Update the camera position to follow the specified object.
+
+    Args:
+        combination (dict): A dictionary containing camera follow information.
+    """
+    follow_data = combination.get("camera_follow", {})
+    if follow_data:
+        for obj_name, follow in follow_data.items():
+            if follow.get("follow"):
+                obj = bpy.data.objects.get(obj_name)
+                if obj:
+                    camera_follow = bpy.data.objects.get("CameraFollow")
+                    if camera_follow:
+                        constraint = camera_follow.constraints.new(type='CHILD_OF')
+                        constraint.target = obj
+                        logger.info(f"Camera will follow {obj_name}")
+                        return
+                else:
+                    logger.warning(f"Object {obj_name} not found for camera follow")
+    else:
+        logger.info("No camera follow data found in combination")
 
 
 def set_camera_settings(combination: dict) -> None:
@@ -300,5 +331,6 @@ def position_camera(combination: dict, focus_object: bpy.types.Object) -> None:
     # Set the position of the CameraAnimationRoot object to slightly above the focus object center, quasi-rule of thirds
     # bbox_height / 2 is the center of the bounding box, bbox_height / 1.66 is more aesthetically pleasing
     bpy.data.objects["CameraAnimationRoot"].location = focus_object.location + Vector(
-        (0, 0, bbox_height * 0.66)
+        (0, 0, bbox_height/2)
     )
+

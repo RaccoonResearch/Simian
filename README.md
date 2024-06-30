@@ -45,15 +45,16 @@ python3 -m simian.combiner --count 1000 --seed 42
 Add movement to all or no objects:
 ```bash
 python3 -m simian.combiner --count 1000 --seed 42 --movement all
-
-python3 -m simian.combiner --count 1000 --seed 42 --movement none
 ```
 
 Allow objects to be on top of each other:
 ```bash
 python3 -m simian.combiner --count 1000 --seed 42 none --ontop all
+```
 
-python3 -m simian.combiner --count 1000 --seed 42 none --ontop none
+Make camera follow an object
+```bash
+python3 -m simian.combiner --count 1000 --seed 42 none --camera_follow all
 ```
 
 ### Generating Videos or Images

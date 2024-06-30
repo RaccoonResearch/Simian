@@ -17,6 +17,7 @@ from .camera import (
     position_camera,
     set_camera_animation,
     set_camera_settings,
+    update_camera_follow
 )
 from .transform import find_largest_length, place_objects_on_grid, apply_movement
 from .object import (
@@ -174,8 +175,7 @@ def render_scene(
 
     set_camera_settings(combination)
     set_camera_animation(combination, animation_length)
-
-    yaw = combination["orientation"]["yaw"]
+    update_camera_follow(combination)
 
     if not user_blend_file:
         set_background(args.hdri_path, combination)
@@ -185,7 +185,7 @@ def render_scene(
     
     place_objects_on_grid(all_objects, largest_length)
     position_camera(combination, focus_object)
-    apply_movement(all_objects, yaw, scene.frame_start, scene.frame_end)
+    apply_movement(all_objects, combination["orientation"]["yaw"], scene.frame_start, scene.frame_end)
 
     # Randomize image sizes
     sizes = [

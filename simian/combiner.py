@@ -98,16 +98,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--movement",
         type=str,
-        default="none",
-        choices=["none", "all"],
+        default="all",
         help="Apply movement to all, none, or random objects."
     )
     parser.add_argument(
         "--ontop",
         type=str,
-        default="none",
-        choices=["none", "all"],
+        default="all",
         help="Allow objects to be on top of each other."
+    )
+    parser.add_argument(
+        "--camera_follow",
+        type=str,
+        default="all",
+        help="Camera will follow specified object as it moves (for individual objects)."
     )
     return parser.parse_args()
 
@@ -294,8 +298,8 @@ def generate_relationship_captions(combination: Dict[str, Any]) -> List[str]:
     return selected_relationships
 
 
-def add_movement_to_objects(objects, movement="none", max_speed=0.5):
-    if movement == "none":
+def add_movement_to_objects(objects, movement=None, max_speed=0.5):
+    if not movement:
         return objects
     for obj in objects:
         if movement == "all":
@@ -559,7 +563,7 @@ def generate_ontop_captions(combination: Dict[str, Any], ontop_data, object_data
     Returns:
         List[str]: List of ontop captions.
     """
-    if ontop_data == "none":
+    if not ontop_data or 'ontop_description_relationship' not in object_data:
         return []
 
     ontop_captions = []
@@ -589,6 +593,27 @@ def generate_ontop_captions(combination: Dict[str, Any], ontop_data, object_data
                 ontop_captions.append(caption)
 
     return ontop_captions
+
+
+def generate_camerafollow_captions(combination: Dict[str, Any], camera_data) -> List[str]:
+    """
+    Generate captions for camera following objects based on the combination data.
+
+    Args:
+        combination (Dict[str, Any]): Combination data.
+        camera_data (Dict[str, Any]): Camera data containing camera follow options. 
+
+    Returns:
+        List[str]: List of camera follow captions.
+    """
+    camera_follow_options = camera_data['camera_follow']
+    camera_follow_captions = []
+    for obj in combination['objects']:
+        if 'camera_follow' in obj:
+            caption = random.choice(camera_follow_options)
+            caption = caption.replace('<object>', obj['name'])
+            camera_follow_captions.append(caption)        
+    return camera_follow_captions
 
 
 def generate_caption(combination: Dict[str, Any], object_data, camera_data, ontop_data) -> str:
@@ -638,6 +663,9 @@ def generate_caption(combination: Dict[str, Any], object_data, camera_data, onto
 
     ontop_captions = generate_ontop_captions(combination, ontop_data, object_data)
     caption_parts.extend(ontop_captions)
+
+    camerafollow_captions = generate_camerafollow_captions(combination, camera_data)
+    caption_parts.extend(camerafollow_captions)
 
     caption = " ".join(caption_parts)  # Join the caption parts into a single string
     caption = caption.strip()  # Remove leading and trailing whitespace
@@ -923,6 +951,17 @@ def generate_stage(texture_data) -> Dict[str, Any]:
     return stage
 
 
+def add_camera_follow(objects, camera_follow):
+    if camera_follow == "all":  
+        # how many objects in array
+        num_objects = len(objects)
+        # randomly select an object to follow
+        random_index = random.randint(0, num_objects - 1)
+        objects[random_index]["camera_follow"] = {"follow": True}
+
+    return objects
+
+
 def generate_combinations(
     camera_data: Dict[str, Any],
     count: int,
@@ -936,9 +975,10 @@ def generate_combinations(
     background_names: List[str],
     background_weights: List[int],
     texture_data: Dict[str, Any],
-    movement: str  = "none",  
+    movement: str = "",  
     max_speed: float = 0.5,
-    ontop_data: str = "none"
+    ontop_data: str = "",
+    camera_follow: str = "",
 ) -> Dict[str, Any]:
     """
     Generate random combinations of camera settings, objects, background, and stage.
@@ -982,6 +1022,8 @@ def generate_combinations(
         stage = generate_stage(texture_data)
 
         objects = add_movement_to_objects(objects, movement, max_speed)
+
+        camera_follow = add_camera_follow(objects, camera_follow)
 
         combination = {
             "index": i,
@@ -1103,6 +1145,7 @@ if __name__ == "__main__":
     movement_data = args.movement
     ontop_data = args.ontop
     speed = 1.0
+    camera_follow = args.camera_follow
 
     # Load backgrounds
     backgrounds = read_json_file(args.datasets_path)["backgrounds"]
@@ -1136,7 +1179,8 @@ if __name__ == "__main__":
         texture_data,
         movement_data,
         speed,
-        ontop_data
+        ontop_data,
+        camera_follow
     )
 
     # Write to JSON file
